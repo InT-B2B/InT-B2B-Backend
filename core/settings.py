@@ -31,6 +31,7 @@ DEBUG = config("DEBUG", cast=bool, default=True)
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1")
 
+AUTH_USER_MODEL = "Accounts.CustomUser"
 
 # Application definition
 
@@ -43,6 +44,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third party libraries
     "rest_framework",
+    'rest_framework_simplejwt',
+    'drf_yasg',
+    'corsheaders',
+
+    "Accounts"
 ]
 
 MIDDLEWARE = [
@@ -53,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -78,6 +85,11 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Media settings
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

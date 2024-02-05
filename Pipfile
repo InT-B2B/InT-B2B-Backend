@@ -10,6 +10,10 @@ python-decouple = "*"
 black = "*"
 pylint = "*"
 bandit = "*"
+pillow = "*"
+drf-yasg = "*"
+djangorestframework-simplejwt = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 
