@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile
+from .models import UserProfile, Company
 from django.contrib.auth import get_user_model
 UserModel = get_user_model()
 
@@ -13,3 +13,8 @@ class UserModelAdmin(admin.ModelAdmin):
 class UserProfileModelAdmin(admin.ModelAdmin):
     model = UserProfile
     list_display = 'managerFirstName', 'managerMiddleName', 'managerLastName', 'managerCountry', 'managerRegion', 'managerZone', 'managerWoreda', 'managerKebele', 'managerPhoneNumber', 'userRole'
+
+@admin.register(Company)
+class CompanyModelAdmin(admin.ModelAdmin):
+    model = Company
+    list_display = ['id', 'companyName']

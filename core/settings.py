@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from cloudinary import config as cloudinary_config
 from datetime import timedelta
 import os
 
@@ -33,6 +34,12 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1")
 
 AUTH_USER_MODEL = "Accounts.CustomUser"
 
+cloudinary_config(
+    cloud_name=config("CLOUDINARY_CLOUD_NAME"),
+    api_key=config("CLOUDINARY_API_KEY"),
+    api_secret=config("CLOUDINARY_API_SECRET"),
+)
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -47,12 +54,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_yasg',
     'corsheaders',
+    "cloudinary",
 
-    "Accounts"
+    "Accounts",
+    "MarketPlace",
+    "Shop",
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -60,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -83,8 +93,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # Media settings
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 
 CSRF_COOKIE_SECURE = False

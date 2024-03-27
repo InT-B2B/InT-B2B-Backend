@@ -11,9 +11,11 @@ black = "*"
 pylint = "*"
 bandit = "*"
 pillow = "*"
-drf-yasg = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
+drf-extra-fields = "*"
+drf-yasg = {version = "*", extras = ["validation"]}
+cloudinary = "*"
 
 [dev-packages]
 

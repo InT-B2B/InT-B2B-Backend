@@ -53,6 +53,9 @@ class UserProfile(TimestampsModel):
     managerRenewedIDBack = models.ImageField(upload_to='user_IDs/')
     profilePic = models.ImageField(upload_to='user_profile_pics/', null=True, blank=True)
 
+    def __str__(self) -> str:
+        return self.managerFirstName + self.managerMiddleName + self.managerLastName
+
 
 class Company(TimestampsModel):
     manager = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -67,3 +70,6 @@ class Company(TimestampsModel):
     companyPhoneNumber = models.CharField(_('phone_number'), max_length=15, blank=True)
     companyLicense = models.ImageField(upload_to='company_licences/')
     companyLogo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.companyName

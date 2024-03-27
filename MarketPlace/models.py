@@ -1,160 +1,120 @@
-from helpers.models import TimestampsModel
 from django.db import models
 
+from helpers.models import TimestampsModel
+from Accounts.models import CustomUser, Company;
+from Shop.models import Shop;
 
+class ProductStatus(models.TextChoices):
+    inStoke = 'inStoke'
+    lowStoke = 'lowStoke'
+    outOfStoke = 'outOfStoke'
 
-class Cart(models.Model):
-    id = models.UUIDField(primary_key=True)
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
-    product = models.ForeignKey('Product', models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
+class ProductAdminStatus(models.TextChoices):
+    approved = 'approved' 
+    notApproved = 'notApproved'
 
-    class Meta:
-        managed = False
-        db_table = 'cart'
-
-class LastViewedProduct(models.Model):
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
-    product = models.ForeignKey('Product', models.DO_NOTHING, blank=True, null=True)
-    viewed_at = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'last_viewed_product'
-
-class Order(models.Model):
-    id = models.UUIDField(primary_key=True)
-    customer = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
-    vat = models.DecimalField(db_column='VAT', max_digits=10, decimal_places=2)  # Field name made lowercase.
-    discount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.TextField()  # This field type is a guess.
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'order'
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, models.DO_NOTHING, blank=True, null=True)
-    product = models.ForeignKey('Product', models.DO_NOTHING, blank=True, null=True)
-    customer = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
-    merchant = models.ForeignKey('User', models.DO_NOTHING, related_name='orderitem_merchant_set', blank=True, null=True)
-    order_price = models.DecimalField(max_digits=10, decimal_places=2)
-    order_vat = models.DecimalField(db_column='order_VAT', max_digits=10, decimal_places=2)  # Field name made lowercase.
-    order_discount = models.DecimalField(max_digits=10, decimal_places=2)
-    promo = models.ForeignKey('Promotion', models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
-    deleted_at = models.DateTimeField(blank=True, null=True)
-    is_deleted = models.BooleanField(blank=True, null=True)
-    status = models.TextField(blank=True, null=True)  # This field type is a guess.
-
-    class Meta:
-        managed = False
-        db_table = 'order_item'
-
-class Product(models.Model):
-    id = models.UUIDField(primary_key=True)
-    shop = models.ForeignKey('Shop', models.DO_NOTHING, blank=True, null=True)
+class Product(TimestampsModel):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
+    status = models.CharField(max_length=25, choices=ProductStatus.choices)
     quantity = models.BigIntegerField()
-    category = models.ForeignKey('ProductCategory', models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
+    category = models.ForeignKey('ProductCategory', on_delete=models.CASCADE)
+    sub_category = models.ForeignKey('ProductSubCategory', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(max_digits=10, decimal_places=2)
+    has_discount = models.BooleanField()
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     tax = models.DecimalField(max_digits=10, decimal_places=2)
-    admin_status = models.TextField(blank=True, null=True)  # This field type is a guess.
-    is_deleted = models.TextField(blank=True, null=True)  # This field type is a guess.
-    rating = models.ForeignKey('UserProductRating', models.DO_NOTHING, blank=True, null=True)
+    admin_status = models.TextField(choices=ProductAdminStatus.choices, blank=True, null=True)
     is_published = models.BooleanField()
+    is_deleted = models.BooleanField(default=False)
     currency = models.CharField(max_length=10)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
-    sub_category = models.ForeignKey('ProductSubCategory', models.DO_NOTHING, blank=True, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'product'
+    def __str__(self) -> str:
+        return self.name
 
+class LastViewedProduct(TimestampsModel):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField()
 
-class ProductCategory(models.Model):
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
+class ProductCategory(TimestampsModel):
+    name = models.CharField(max_length=225)
+    description = models.CharField(max_length=255, blank=True,)
+
+    def __str__(self) -> str:
+        return self.name
+    
+class CategoryThumbnailImage(TimestampsModel):
+    category = models.ForeignKey('ProductCategory', on_delete=models.CASCADE)
+    url = models.CharField(max_length=255)    
+
+class ProductSubCategory(TimestampsModel):
     name = models.CharField(max_length=225, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
+    description = models.CharField(max_length=255)
+    parent_category = models.ForeignKey('ProductCategory', blank=True, null=True, on_delete=models.CASCADE)
 
-    class Meta:
-        managed = False
-        db_table = 'product_category'
+    def __str__(self) -> str:
+        return self.name
 
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
+class ProductImage(TimestampsModel):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
     url = models.CharField(max_length=255)
 
-    class Meta:
-        managed = False
-        db_table = 'product_image'
-
-class ProductReview(models.Model):
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
+class ProductReview(TimestampsModel):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     comment = models.TextField(blank=True, null=True)
-    reply = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
+    reply = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)
 
-    class Meta:
-        managed = False
-        db_table = 'product_review'
+class UserProductRating(TimestampsModel):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    rating = models.IntegerField()
 
+class Cart(TimestampsModel):
+    user = models.ForeignKey(CustomUser, blank=True, null=True, on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', blank=True, null=True, on_delete=models.CASCADE)        
 
-class ProductSubCategory(models.Model):
-    name = models.CharField(max_length=225, blank=True, null=True)
-    parent_category = models.ForeignKey(ProductCategory, models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
+class PromoProduct(TimestampsModel):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    promo = models.ForeignKey('Promotion', on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
-    class Meta:
-        managed = False
-        db_table = 'product_sub_category'
-
-class PromoProduct(models.Model):
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
-    promo = models.ForeignKey('Promotion', models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'promo_product'
-
-
-class Promotion(models.Model):
-    user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
+class Promotion(TimestampsModel):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
     code = models.CharField(max_length=255)
     promotion_type = models.CharField(max_length=255)
-    discount_type = models.TextField(blank=True, null=True)  # This field type is a guess.
+    discount_type = models.TextField(blank=True, null=True)
     quantity = models.BigIntegerField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     maximum_discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
 
-    class Meta:
-        managed = False
-        db_table = 'promotion'
+class Order(TimestampsModel):
+    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    vat = models.DecimalField(db_column='VAT', max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.TextField()
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
-class Wishlist(models.Model):
-    user = models.ForeignKey(User, models.DO_NOTHING, blank=True, null=True)
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
-    createdat = models.DateTimeField(db_column='createdAt', blank=True, null=True)  # Field name made lowercase.
-    updatedat = models.DateTimeField(db_column='updatedAt', blank=True, null=True)  # Field name made lowercase.
 
-    class Meta:
-        managed = False
-        db_table = 'wishlist'                                                        
+class OrderItem(TimestampsModel):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    customer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    merchant = models.ForeignKey(CustomUser, related_name='orderItem_merchant', on_delete=models.CASCADE)
+    order_price = models.DecimalField(max_digits=10, decimal_places=2)
+    order_vat = models.DecimalField(db_column='order_VAT', max_digits=10, decimal_places=2)
+    order_discount = models.DecimalField(max_digits=10, decimal_places=2)
+    promo = models.ForeignKey('Promotion', blank=True, null=True, on_delete=models.CASCADE)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_deleted = models.BooleanField(blank=True, null=True)
+    status = models.TextField(blank=True, null=True)        
+
+class Wishlist(TimestampsModel):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)                                                      
